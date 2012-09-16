@@ -316,6 +316,12 @@ def SignOutput(temp_zip_name, output_zip_name):
   common.SignFile(temp_zip_name, output_zip_name, OPTIONS.package_key, pw,
                   whole_file=True)
 
+  ########## Printing of md5sum ##########
+  print "############ md5sum ############\n"
+  os.system("md5sum " + output_zip_name + " > " + output_zip_name + ".md5sum")
+  os.system("cat " + output_zip_name + ".md5sum")
+  os.system("touch " + output_zip_name.replace(".zip", ".log"))
+
 
 def AppendAssertions(script, input_zip):
   if OPTIONS.override_device == "auto":
@@ -415,6 +421,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   #script.UnpackPackageDir("recovery", "/system")
   script.UnpackPackageDir("system", "/system")
 
+  script.Print("Creating symlinks")
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
 
@@ -425,6 +432,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   #MakeRecoveryPatch(output_zip, recovery_img, boot_img)
 
   Item.GetMetadata(input_zip)
+  script.Print("Setting permissions")
   Item.Get("system").SetPermissions(script)
 
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)

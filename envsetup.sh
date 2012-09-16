@@ -188,7 +188,9 @@ function setpaths()
     fi
 
     unset ANDROID_PRODUCT_OUT
+    unset PRODUCT_ROM_FILE
     export ANDROID_PRODUCT_OUT=$(get_abs_build_var PRODUCT_OUT)
+    export PRODUCT_ROM_FILE=$(get_build_var PRODUCT_ROM_FILE)
     export OUT=$ANDROID_PRODUCT_OUT
 
     unset ANDROID_HOST_OUT
@@ -201,6 +203,11 @@ function setpaths()
     # needed for building linux on MacOS
     # TODO: fix the path
     #export HOST_EXTRACFLAGS="-I "$T/system/kernel_headers/host_include
+    # Regenerated  build.prop
+	echo "Directory of output for Rom..."
+	echo $ANDROID_PRODUCT_OUT
+	echo "Deleting build.prop obsolete..."
+   	rm  $ANDROID_PRODUCT_OUT/system/build.prop
 }
 
 function printconfig()
@@ -440,11 +447,6 @@ function add_lunch_combo()
     LUNCH_MENU_CHOICES=(${LUNCH_MENU_CHOICES[@]} $new_combo)
 }
 
-# add the default one here
-add_lunch_combo full-eng
-add_lunch_combo full_x86-eng
-add_lunch_combo vbox_x86-eng
-
 function print_lunch_menu()
 {
     local uname=$(uname)
@@ -479,7 +481,6 @@ function brunch()
 {
     breakfast $*
     if [ $? -eq 0 ]; then
-        export CM_FAST_BUILD=1
         mka bacon
     else
         echo "No such item in brunch menu. Try 'breakfast'"
@@ -558,17 +559,7 @@ function lunch()
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
     check_product $product
-    if [ $? -ne 0 ]
-    then
-        # if we can't find a product, try to grab it off the CM github
-        T=$(gettop)
-        pushd $T > /dev/null
-        build/tools/roomservice.py $product
-        popd > /dev/null
-        check_product $product
-    else
-        build/tools/roomservice.py $product true
-    fi
+
     if [ $? -ne 0 ]
     then
         echo
