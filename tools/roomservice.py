@@ -19,7 +19,7 @@ except:
     device = product
 
 if not depsonly:
-    print "Device %s not found. Attempting to retrieve device repository from CyanogenMod Github (http://github.com/CyanogenMod)." % device
+    print "Device %s not found. Attempting to retrieve device repository:" % device
 
 repositories = []
 
@@ -77,9 +77,7 @@ def get_from_device_manifest(devicename):
         dm = ElementTree.Element("manifest")
 
     for localpath in dm.findall("project"):
-        print '%s' % (localpath)
         if re.search("android_device_.*_%s$" % device, localpath.get("name")):
-            print 'FOUND %s' % (localpath.get("path"))
             return localpath
 
     return None
@@ -170,16 +168,12 @@ if depsonly:
 
 else:
 
-    print 'device = %s' % device
     obj = get_from_device_manifest(device)
     repo_path = obj.get("path")
     repo_name = obj.get("name")
 
     if obj.get("path"):
         print "Found repository in devices.xml: %s" % obj.get("name")
-
-        print 'repo_path = %s' % repo_path
-        print 'repo_name = %s' % repo_name
 
         add_to_manifest([{'repository':repo_name,'target_path':repo_path}])
 
@@ -190,9 +184,8 @@ else:
         fetch_dependencies(repo_path)
         print "Done"
         sys.exit()
-    else:
-        print 'KK'
 
+    print "Not found in devices.xml, searching at CyanogenMod"
     page = 1
     while not depsonly:
         result = json.loads(urllib2.urlopen("https://api.github.com/users/CyanogenMod/repos?page=%d" % page).read())
