@@ -23,15 +23,6 @@ if not depsonly:
 
 repositories = []
 
-page = 1
-while not depsonly:
-    result = json.loads(urllib2.urlopen("https://api.github.com/users/CyanogenMod/repos?page=%d" % page).read())
-    if len(result) == 0:
-        break
-    for res in result:
-        repositories.append(res)
-    page = page + 1
-
 def exists_in_tree(lm, repository):
     for child in lm.getchildren():
         if child.attrib['name'].endswith(repository):
@@ -78,6 +69,21 @@ def get_from_manifest(devicename):
 
     return None
 
+def get_from_device_manifest(devicename):
+    try:
+        dm = ElementTree.parse(".repo/manifests/devices.xml")
+        dm = dm.getroot()
+    except:
+        dm = ElementTree.Element("manifest")
+
+    for localpath in dm.findall("project"):
+        print '%s' % (localpath)
+        if re.search("android_device_.*_%s$" % device, localpath.get("name")):
+            print 'FOUND %s' % (localpath.get("path"))
+            return localpath
+
+    return None
+
 def is_in_manifest(projectname):
     try:
         lm = ElementTree.parse(".repo/local_manifest.xml")
@@ -105,9 +111,9 @@ def add_to_manifest(repositories):
             print 'CyanogenMod/%s already exists' % (repo_name)
             continue
 
-        print 'Adding dependency: CyanogenMod/%s -> %s' % (repo_name, repo_target)
+        print 'Adding dependency: %s -> %s' % (repo_name, repo_target)
         project = ElementTree.Element("project", attrib = { "path": repo_target,
-            "remote": "github", "name": "CyanogenMod/%s" % repo_name, "revision": "jellybean" })
+            "remote": "github", "name": repo_name, "revision": "jellybean" })
 
         if 'branch' in repository:
             project.set('revision',repository['branch'])
@@ -130,10 +136,14 @@ def fetch_dependencies(repo_path):
     if os.path.exists(dependencies_path):
         dependencies_file = open(dependencies_path, 'r')
         dependencies = json.loads(dependencies_file.read())
+
         fetch_list = []
 
         for dependency in dependencies:
-            if not is_in_manifest("CyanogenMod/%s" % dependency['repository']):
+            if not "/" in dependency['repository']:
+                dependency['repository'] = "CyanogenMod/%s" % dependency['repository']
+
+            if not is_in_manifest(dependency['repository']):
                 fetch_list.append(dependency)
                 syncable_repos.append(dependency['target_path'])
 
@@ -159,6 +169,38 @@ if depsonly:
     sys.exit()
 
 else:
+
+    obj = get_from_device_manifest(device)
+    repo_path = obj.get("path")
+    repo_name = obj.get("name")
+
+    if obj.get("path"):
+        print "Found repository in devices.xml: %s" % obj.get("name")
+
+        print 'repo_path = %s' % repo_path
+        print 'repo_name = %s' % repo_name
+
+        add_to_manifest([{'repository':repo_name,'target_path':repo_path}])
+
+        print "Syncing repository to retrieve project."
+        os.system('repo sync %s' % repo_path)
+        print "Repository synced!"
+
+        fetch_dependencies(repo_path)
+        print "Done"
+        sys.exit()
+    else:
+        print 'KK'
+
+    page = 1
+    while not depsonly:
+        result = json.loads(urllib2.urlopen("https://api.github.com/users/CyanogenMod/repos?page=%d" % page).read())
+        if len(result) == 0:
+            break
+        for res in result:
+            repositories.append(res)
+        page = page + 1
+
     for repository in repositories:
         repo_name = repository['name']
         if repo_name.startswith("android_device_") and repo_name.endswith("_" + device):
@@ -167,7 +209,7 @@ else:
 
             repo_path = "device/%s/%s" % (manufacturer, device)
 
-            add_to_manifest([{'repository':repo_name,'target_path':repo_path}])
+            add_to_manifest([{'repository':"CyanogenMod/%s" % repo_name,'target_path':repo_path}])
 
             print "Syncing repository to retrieve project."
             os.system('repo sync %s' % repo_path)
