@@ -71,7 +71,7 @@ def get_from_manifest(devicename):
 
 def get_from_device_manifest(devicename):
     try:
-        dm = ElementTree.parse(".repo/manifests/devices.xml")
+        dm = ElementTree.parse("android/devices.xml")
         dm = dm.getroot()
     except:
         dm = ElementTree.Element("manifest")
@@ -170,6 +170,7 @@ if depsonly:
 
 else:
 
+    print 'device = %s' % device
     obj = get_from_device_manifest(device)
     repo_path = obj.get("path")
     repo_name = obj.get("name")
