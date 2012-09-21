@@ -128,10 +128,16 @@ def add_to_manifest(repositories):
 
 def fetch_dependencies(repo_path):
     print 'Looking for dependencies'
-    dependencies_path = repo_path + '/cm.dependencies'
+
     syncable_repos = []
 
+    dependencies_path = repo_path + '/osr.dependencies'
+    if not os.path.exists(dependencies_path):
+        print 'No osr.dependencies file in %s' % repo_path
+        dependencies_path = repo_path + '/cm.dependencies'
+
     if os.path.exists(dependencies_path):
+        print 'Using %s' % dependencies_path
         dependencies_file = open(dependencies_path, 'r')
         dependencies = json.loads(dependencies_file.read())
 
