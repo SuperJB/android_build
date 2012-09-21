@@ -106,7 +106,7 @@ def add_to_manifest(repositories):
         repo_name = repository['repository']
         repo_target = repository['target_path']
         if exists_in_tree(lm, repo_name):
-            print 'Project/%s already exists' % (repo_name)
+            print 'CyanogenMod/%s already exists' % (repo_name)
             continue
 
         print 'Adding dependency: %s -> %s' % (repo_name, repo_target)
@@ -128,7 +128,7 @@ def add_to_manifest(repositories):
 
 def fetch_dependencies(repo_path):
     print 'Looking for dependencies'
-    dependencies_path = repo_path + '/osr.dependencies'
+    dependencies_path = repo_path + '/cm.dependencies'
     syncable_repos = []
 
     if os.path.exists(dependencies_path):
@@ -139,7 +139,7 @@ def fetch_dependencies(repo_path):
 
         for dependency in dependencies:
             if not "/" in dependency['repository']:
-                dependency['repository'] = "Project/%s" % dependency['repository']
+                dependency['repository'] = "CyanogenMod/%s" % dependency['repository']
 
             if not is_in_manifest(dependency['repository']):
                 fetch_list.append(dependency)
@@ -185,7 +185,7 @@ else:
         print "Done"
         sys.exit()
 
-    print "Not found in devices.xml, searching at Github"
+    print "Not found in devices.xml, searching at CyanogenMod"
     page = 1
     while not depsonly:
         result = json.loads(urllib2.urlopen("https://api.github.com/users/CyanogenMod/repos?page=%d" % page).read())
@@ -203,7 +203,7 @@ else:
 
             repo_path = "device/%s/%s" % (manufacturer, device)
 
-            add_to_manifest([{'repository':"Projectd/%s" % repo_name,'target_path':repo_path}])
+            add_to_manifest([{'repository':"CyanogenMod/%s" % repo_name,'target_path':repo_path}])
 
             print "Syncing repository to retrieve project."
             os.system('repo sync %s' % repo_path)
@@ -213,4 +213,4 @@ else:
             print "Done"
             sys.exit()
 
-print "Repository for %s not found in the Github repository list. If this is in error, you may need to manually add it to your local_manifest.xml." % device
+print "Repository for %s not found in the CyanogenMod Github repository list. If this is in error, you may need to manually add it to your local_manifest.xml." % device
