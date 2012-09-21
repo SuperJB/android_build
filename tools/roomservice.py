@@ -106,7 +106,7 @@ def add_to_manifest(repositories):
         repo_name = repository['repository']
         repo_target = repository['target_path']
         if exists_in_tree(lm, repo_name):
-            print 'CyanogenMod/%s already exists' % (repo_name)
+            print '%s already exists' % (repo_name)
             continue
 
         print 'Adding dependency: %s -> %s' % (repo_name, repo_target)
