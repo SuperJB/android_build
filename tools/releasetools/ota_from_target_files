@@ -40,6 +40,9 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
   -w  (--wipe_user_data)
       Generate an OTA package that will wipe the user data partition
       when installed.
+      
+  -c  (--copy_user_data)
+      Copy on data partition the contents of data directory when installed.
 
   -n  (--no_prereq)
       Omit the timestamp prereq check normally included at the top of
@@ -66,6 +69,7 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
 """
 
 import sys
+import os
 
 if sys.hexversion < 0x02040000:
   print >> sys.stderr, "Python 2.4 or newer is required."
@@ -95,6 +99,7 @@ OPTIONS.require_verbatim = set()
 OPTIONS.prohibit_verbatim = set(("system/build.prop",))
 OPTIONS.patch_threshold = 0.95
 OPTIONS.wipe_user_data = False
+OPTIONS.copy_user_data = False
 OPTIONS.omit_prereq = False
 OPTIONS.extra_script = None
 OPTIONS.aslr_mode = True
@@ -411,14 +416,16 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.ShowProgress(0.5, 0)
 
   if OPTIONS.wipe_user_data:
+    script.Print("Erasing user data...")
     script.FormatPartition("/data")
 
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
 
+  script.Print("Formatting system")
   script.FormatPartition("/system")
   script.Mount("/system")
-  #script.UnpackPackageDir("recovery", "/system")
+  script.Print("Installing SuperOSR")
   script.UnpackPackageDir("system", "/system")
 
   script.Print("Creating symlinks")
@@ -435,6 +442,11 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("Setting permissions")
   Item.Get("system").SetPermissions(script)
 
+
+  if OPTIONS.copy_user_data:
+    script.Mount("/data")
+    script.UnpackPackageDir("data", "/data")
+    
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
@@ -634,6 +646,10 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
     script.Print("Erasing user data...")
     script.FormatPartition("/data")
 
+  if OPTIONS.copy_user_data:
+    script.Mount("/data")
+    script.UnpackPackageDir("data", "/data")
+    
   script.Print("Removing unneeded files...")
   script.DeleteFiles(["/"+i[0] for i in verbatim_targets] +
                      ["/"+i for i in sorted(source_data)
@@ -774,6 +790,8 @@ def main(argv):
       OPTIONS.incremental_source = a
     elif o in ("-w", "--wipe_user_data"):
       OPTIONS.wipe_user_data = True
+    elif o in ("-c", "--copy_user_data"):
+      OPTIONS.copy_user_data = True
     elif o in ("-n", "--no_prereq"):
       OPTIONS.omit_prereq = True
     elif o in ("-e", "--extra_script"):
@@ -796,11 +814,12 @@ def main(argv):
     return True
 
   args = common.ParseOptions(argv, __doc__,
-                             extra_opts="b:k:i:d:wne:a:",
+                             extra_opts="b:k:i:d:wcne:a:",
                              extra_long_opts=["board_config=",
                                               "package_key=",
                                               "incremental_from=",
                                               "wipe_user_data",
+                                              "copy_user_data",
                                               "no_prereq",
                                               "extra_script=",
                                               "worker_threads=",

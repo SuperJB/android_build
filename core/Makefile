@@ -1282,6 +1282,22 @@ else
     $(INTERNAL_OTA_PACKAGE_TARGET): override_device := $(TARGET_OTA_ASSERT_DEVICE)
 endif
 
+ifndef VENDOR_COPY_USER_DATA
+	VENDOR_COPY_USER_DATA := false
+endif
+
+ifeq ($(VENDOR_COPY_USER_DATA),true)
+    $(INTERNAL_OTA_PACKAGE_TARGET): copy_user_data := c
+endif
+
+ifndef VENDOR_WIPE_USER_DATA
+	VENDOR_WIPE_USER_DATA := false
+endif
+
+ifeq ($(VENDOR_WIPE_USER_DATA),true)
+    $(INTERNAL_OTA_PACKAGE_TARGET): wipe_user_data := w
+endif
+
 ifneq ($(NAM_VARIANT),)
     $(INTERNAL_OTA_PACKAGE_TARGET): modelidcfg := true
 else
@@ -1296,7 +1312,7 @@ endif
 
 $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS) $(SELINUX_DEPENDS)
 	@echo -e ${CL_PFX}"Package OTA:"${CL_RST}" $@"
-	$(OTA_FROM_TARGET_SCRIPT) -v \
+	$(OTA_FROM_TARGET_SCRIPT) -v$(copy_user_data)$(wipe_user_data) \
 	   -p $(HOST_OUT) \
 	   -k $(KEY_CERT_PAIR) \
 	   --backup=$(backuptool) \
