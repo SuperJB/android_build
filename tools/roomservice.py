@@ -83,6 +83,19 @@ def get_from_manifest(devicename):
 
     return None
 
+def get_project_from_path_in_manifest(target_path):
+    try:
+        mm = ElementTree.parse(".repo/manifest.xml")
+        mm = mm.getroot()
+    except:
+        mm = ElementTree.Element("manifest")
+
+    for project in mm.findall("project"):
+        if project.get("path") == target_path:
+            return project
+
+    return None
+
 def get_from_device_manifest(devicename):
     try:
         dm = ElementTree.parse("android/devices.xml")
@@ -110,6 +123,14 @@ def is_in_manifest(projectname):
     return None
 
 def add_to_manifest(repositories):
+    # Main Manifest
+    try:
+        mm = ElementTree.parse(".repo/local_manifest.xml")
+        mm = mm.getroot()
+    except:
+        mm = ElementTree.Element("manifest")
+
+    # Local Manifest
     try:
         lm = ElementTree.parse(".repo/local_manifest.xml")
         lm = lm.getroot()
@@ -119,6 +140,21 @@ def add_to_manifest(repositories):
     for repository in repositories:
         repo_name = repository['repository']
         repo_target = repository['target_path']
+        mmproj = get_project_from_path_in_manifest(repo_target)
+        if mmproj.get("path"):
+            print 'Found %s already defined in main manifest as %s' % (repo_target, mmproj.get("name"))
+            print 'Adding remove-project: %s -> %s' % (mmproj.get("name"), repo_target)
+            project = ElementTree.Element("remove-project", attrib = { "path": repo_target,
+                "remote": "github", "name": mmproj.get("name"), "revision": "jellybean" })
+
+            if mmproj.get('remote'):
+                project.set('remote',mmproj.get('remote'))
+
+            if mmproj.get('revision'):
+                project.set('revision',mmproj.get('revision'))
+
+            lm.append(project)
+
         if exists_in_tree(lm, repo_name):
             print '%s already exists' % (repo_name)
             continue
