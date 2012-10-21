@@ -141,7 +141,7 @@ def add_to_manifest(repositories):
         repo_name = repository['repository']
         repo_target = repository['target_path']
         mmproj = get_project_from_path_in_manifest(repo_target)
-        if mmproj.get("path"):
+        if mmproj != None:
             print 'Found %s already defined in main manifest as %s' % (repo_target, mmproj.get("name"))
             print 'Adding remove-project: %s -> %s' % (mmproj.get("name"), repo_target)
             project = ElementTree.Element("remove-project", attrib = { "path": repo_target,
