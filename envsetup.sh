@@ -192,8 +192,10 @@ function setpaths()
 
     unset ANDROID_PRODUCT_OUT
     unset PRODUCT_ROM_FILE
+    unset ALIAS
     export ANDROID_PRODUCT_OUT=$(get_abs_build_var PRODUCT_OUT)
     export PRODUCT_ROM_FILE=$(get_build_var PRODUCT_ROM_FILE)
+    export ALIAS=$(get_build_var ALIAS)
     export OUT=$ANDROID_PRODUCT_OUT
 
     unset ANDROID_HOST_OUT
