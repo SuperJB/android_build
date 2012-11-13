@@ -211,8 +211,10 @@ function setpaths()
     # Regenerated  build.prop
 	echo "Directory of output for Rom..."
 	echo $ANDROID_PRODUCT_OUT
-	echo "Deleting build.prop obsolete..."
-   	rm  $ANDROID_PRODUCT_OUT/system/build.prop
+	if [ -f $ANDROID_PRODUCT_OUT/system/build.prop ]; then
+	    echo "Deleting build.prop obsolete..."
+   	    rm  $ANDROID_PRODUCT_OUT/system/build.prop
+	fi
 }
 
 function printconfig()
