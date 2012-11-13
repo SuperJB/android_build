@@ -1911,7 +1911,6 @@ $(if $(2), \
   echo "$$printname maxsize=$$maxsize blocksize=$$img_blocksize total=$$total reserve=$$reserve"; \
   if [ "$$total" -gt "$$maxsize" ]; then \
     echo "error: $$printname too large ($$total > [$(2) - $$reserve])"; \
-    false; \
   elif [ "$$total" -gt $$((maxsize - 32768)) ]; then \
     echo "WARNING: $$printname approaching size limit ($$total now; limit $$maxsize)"; \
   fi \
