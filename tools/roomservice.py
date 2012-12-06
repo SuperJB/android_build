@@ -147,10 +147,10 @@ def add_to_manifest(repositories):
             project = ElementTree.Element("remove-project", attrib = { "path": repo_target,
                 "remote": "github", "name": mmproj.get("name"), "revision": "jellybean" })
 
-            if mmproj.get('remote'):
+            if mmproj.get('remote') != None:
                 project.set('remote',mmproj.get('remote'))
 
-            if mmproj.get('revision'):
+            if mmproj.get('revision') != None:
                 project.set('revision',mmproj.get('revision'))
 
             lm.append(project)
@@ -163,8 +163,17 @@ def add_to_manifest(repositories):
         project = ElementTree.Element("project", attrib = { "path": repo_target,
             "remote": "github", "name": repo_name, "revision": "jellybean" })
 
-        if 'branch' in repository:
+        if 'revision' in repository:
+            print repository['revision'];
+            project.set('revision',repository['revision'])
+
+        elif 'branch' in repository:
+            print repository['branch'];
             project.set('revision',repository['branch'])
+
+        if 'remote' in repository:
+            print repository['remote'];
+            project.set('remote',repository['remote'])
 
         lm.append(project)
 
