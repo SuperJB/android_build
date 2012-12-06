@@ -200,8 +200,9 @@ def fetch_dependencies(repo_path):
         fetch_list = []
 
         for dependency in dependencies:
-            if not "/" in dependency['repository']:
-                dependency['repository'] = "CyanogenMod/%s" % dependency['repository']
+            if dependency['repository'] == None or dependency['repository'] == "github": 
+                if not "/" in dependency['repository']:
+                    dependency['repository'] = "CyanogenMod/%s" % dependency['repository']
 
             if not is_in_manifest(dependency['repository']):
                 fetch_list.append(dependency)
