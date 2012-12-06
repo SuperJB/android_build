@@ -164,15 +164,12 @@ def add_to_manifest(repositories):
             "remote": "github", "name": repo_name, "revision": "jellybean" })
 
         if 'revision' in repository:
-            print repository['revision'];
             project.set('revision',repository['revision'])
 
         elif 'branch' in repository:
-            print repository['branch'];
             project.set('revision',repository['branch'])
 
         if 'remote' in repository:
-            print repository['remote'];
             project.set('remote',repository['remote'])
 
         lm.append(project)
