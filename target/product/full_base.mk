@@ -20,9 +20,6 @@
 # in inherited configurations.
 
 PRODUCT_PACKAGES := \
-    drmserver \
-    libdrmframework \
-    libdrmframework_jni \
     libfwdlockengine \
     VideoEditor \
     WAPPushManager
@@ -33,6 +30,8 @@ PRODUCT_PACKAGES += \
     libvideoeditor_osal \
     libvideoeditor_videofilters \
     libvideoeditorplayer
+
+include $(SRC_TARGET_DIR)/product/emulator.mk
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
