@@ -232,11 +232,11 @@ if depsonly:
 else:
 
     obj = get_from_device_manifest(device)
-    repo_path = obj.get("path")
-    repo_name = obj.get("name")
+    if obj != None:
+        repo_path = obj.get("path")
+        repo_name = obj.get("name")
 
-    if obj.get("path"):
-        print "Found repository in devices.xml: %s" % obj.get("name")
+        print "Found repository in devices.xml: %s" % repo_name
 
         add_to_manifest([{'repository':repo_name,'target_path':repo_path}])
 
@@ -248,7 +248,8 @@ else:
         print "Done"
         sys.exit()
 
-    print "Not found in devices.xml, searching at CyanogenMod"
+    print "Not found in android/devices.xml (Check and try repo sync android, then rerun lunch)"
+    print "Searching at CyanogenMod"
     page = 1
     while not depsonly:
         result = json.loads(urllib2.urlopen("https://api.github.com/users/CyanogenMod/repos?page=%d" % page).read())
