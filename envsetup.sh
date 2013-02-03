@@ -41,7 +41,7 @@ function get_abs_build_var()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
-    (cd $T; CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
+    (\cd $T; CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
       make --no-print-directory -C "$T" -f build/core/config.mk dumpvar-abs-$1)
 }
 
@@ -142,18 +142,19 @@ function setpaths()
     gccprebuiltdir=$(get_abs_build_var ANDROID_GCC_PREBUILTS)
     gccprebuiltextradir=$(get_abs_build_var ANDROID_GCC_PREBUILTS_EXTRA)
 
-    # defined in core/config.mk
+    # defined in core/combo/TARGET_linux-{arm,mips,x86}.mk
     targetgccversion=$(get_build_var TARGET_GCC_VERSION)
+    export TARGET_GCC_VERSION=$targetgccversion
 
     # The gcc toolchain does not exists for windows/cygwin. In this case, do not reference it.
     export ANDROID_EABI_TOOLCHAIN=
     local ARCH=$(get_build_var TARGET_ARCH)
     case $ARCH in
-        x86) toolchaindir=x86/i686-linux-android-4.6/bin
+        x86) toolchaindir=x86/i686-linux-android-$targetgccversion/bin
             ;;
         arm) toolchaindir=arm/arm-linux-androideabi-$targetgccversion/bin
             ;;
-        mips) toolchaindir=mips/mipsel-linux-android-4.6/bin
+        mips) toolchaindir=mips/mipsel-linux-android-$targetgccversion/bin
             ;;
         *)
             echo "Can't find toolchain for unknown architecture: $ARCH"
@@ -726,16 +727,13 @@ function gettop
             # faked up with symlink names.
             PWD= /bin/pwd
         else
-            # We redirect cd to /dev/null in case it's aliased to
-            # a command that prints something as a side-effect
-            # (like pushd)
             local HERE=$PWD
             T=
             while [ \( ! \( -f $TOPFILE \) \) -a \( $PWD != "/" \) ]; do
-                cd .. > /dev/null
+                \cd ..
                 T=`PWD= /bin/pwd`
             done
-            cd $HERE > /dev/null
+            \cd $HERE
             if [ -f "$T/$TOPFILE" ]; then
                 echo $T
             fi
@@ -756,21 +754,18 @@ function m()
 function findmakefile()
 {
     TOPFILE=build/core/envsetup.mk
-    # We redirect cd to /dev/null in case it's aliased to
-    # a command that prints something as a side-effect
-    # (like pushd)
     local HERE=$PWD
     T=
     while [ \( ! \( -f $TOPFILE \) \) -a \( $PWD != "/" \) ]; do
         T=`PWD= /bin/pwd`
         if [ -f "$T/Android.mk" ]; then
             echo $T/Android.mk
-            cd $HERE > /dev/null
+            \cd $HERE
             return
         fi
-        cd .. > /dev/null
+        \cd ..
     done
-    cd $HERE > /dev/null
+    \cd $HERE
 }
 
 function mm()
@@ -812,7 +807,7 @@ function mmm()
             fi
             DIR=`echo $DIR | sed -e 's/:.*//' -e 's:/$::'`
             if [ -f $DIR/Android.mk ]; then
-                TO_CHOP=`(cd -P -- $T && pwd -P) | wc -c | tr -d ' '`
+                TO_CHOP=`(\cd -P -- $T && pwd -P) | wc -c | tr -d ' '`
                 TO_CHOP=`expr $TO_CHOP + 1`
                 START=`PWD= /bin/pwd`
                 MFILE=`echo $START | cut -c${TO_CHOP}-`
@@ -847,7 +842,7 @@ function croot()
 {
     T=$(gettop)
     if [ "$T" ]; then
-        cd $(gettop)
+        \cd $(gettop)
     else
         echo "Couldn't locate the top of the tree.  Try setting TOP."
     fi
@@ -856,20 +851,17 @@ function croot()
 function cproj()
 {
     TOPFILE=build/core/envsetup.mk
-    # We redirect cd to /dev/null in case it's aliased to
-    # a command that prints something as a side-effect
-    # (like pushd)
     local HERE=$PWD
     T=
     while [ \( ! \( -f $TOPFILE \) \) -a \( $PWD != "/" \) ]; do
         T=$PWD
         if [ -f "$T/Android.mk" ]; then
-            cd $T
+            \cd $T
             return
         fi
-        cd .. > /dev/null
+        \cd ..
     done
-    cd $HERE > /dev/null
+    \cd $HERE
     echo "can't find Android.mk"
 }
 
@@ -1215,7 +1207,7 @@ function smoketest()
         return
     fi
 
-    (cd "$T" && mmm tests/SmokeTest) &&
+    (\cd "$T" && mmm tests/SmokeTest) &&
       adb uninstall com.android.smoketest > /dev/null &&
       adb uninstall com.android.smoketest.tests > /dev/null &&
       adb install $ANDROID_PRODUCT_OUT/data/app/SmokeTestApp.apk &&
@@ -1242,7 +1234,7 @@ function godir () {
     T=$(gettop)
     if [[ ! -f $T/filelist ]]; then
         echo -n "Creating index..."
-        (cd $T; find . -wholename ./out -prune -o -wholename ./.repo -prune -o -type f > filelist)
+        (\cd $T; find . -wholename ./out -prune -o -wholename ./.repo -prune -o -type f > filelist)
         echo " Done"
         echo ""
     fi
@@ -1275,7 +1267,7 @@ function godir () {
     else
         pathname=${lines[0]}
     fi
-    cd $T/$pathname
+    \cd $T/$pathname
 }
 
 function cmremote()
